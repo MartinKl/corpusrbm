@@ -176,7 +176,7 @@ class RnnRbm:
         n_hidden=150,
         n_hidden_recurrent=100,
         lr=0.001,
-        vocab_size=54929
+        vocab_size=129 #54929
     ):
         '''Constructs and compiles Theano functions for training and sequence
         generation.
@@ -235,7 +235,7 @@ class RnnRbm:
 
         dataset = np.load('train.npy')  # FIXME read data
         max_ix = self.vocab_size
-        eye = np.eye(max_ix, dtype=np.int8)
+        eye = np.eye(max_ix, dtype=np.int16)
         try:
             for epoch in range(num_epochs):
                 print('Starting epoch', epoch)
