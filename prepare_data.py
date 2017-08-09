@@ -5,7 +5,7 @@ from functools import partial
 
 with open('vocabs.pkl', 'rb') as f:
     vocab = {v: k for k, v in pickle.load(f)['text'].items()}
-goh = np.load('goh_text.npy').flatten()
+goh = np.load('goh_text.npy')
 
 x = []
 START_IX = 1
