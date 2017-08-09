@@ -234,7 +234,8 @@ class RnnRbm:
             can safely interrupt training with Ctrl+C at any time.'''
 
         dataset = np.load('train.npy')  # FIXME read data
-        max_ix = 54928
+        max_ix = self.vocab_size
+        eye = np.eye(max_ix, dtype=np.int8)
         try:
             for epoch in range(num_epochs):
                 print('Starting epoch', epoch)
@@ -244,11 +245,12 @@ class RnnRbm:
                 for s, sequence in enumerate(dataset):
                     if s % 5 == 0:
                         print('\t', round(s / len(dataset) * 100, 4), '%')
-                    for i in range(0, len(sequence), batch_size):
-                        ix = sequence[i]
-                        cost = self.train_function([[0 for _ in range(ix)] + [1] + [0 for _ in range(ix, max_ix)]])#[i:i + batch_size])
-                        costs.append(cost)
-
+                    #for i in range(0, len(sequence)):
+                    #    ix = sequence[i]
+                    #    cost = self.train_function([eye[ix]])#[i:i + batch_size])
+                    #    costs.append(cost)
+                    cost = self.train_function([eye[ix] for ix in sequence])
+                    costs.append(cost)
                 print('Epoch %i/%i' % (epoch + 1, num_epochs))
                 print(np.mean(costs))
                 print('Saving ...')
