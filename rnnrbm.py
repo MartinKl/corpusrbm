@@ -6,6 +6,8 @@
 import glob
 import os
 import sys
+import time
+import pickle
 
 import numpy as np
 import theano
@@ -174,9 +176,7 @@ class RnnRbm:
         n_hidden=150,
         n_hidden_recurrent=100,
         lr=0.001,
-        r=(21, 109),
-        vocab_size=54929,
-        dt=0.3
+        vocab_size=54929
     ):
         '''Constructs and compiles Theano functions for training and sequence
         generation.
@@ -196,14 +196,14 @@ class RnnRbm:
             Sampling period when converting the MIDI files into piano-rolls, or
             equivalently the time difference between consecutive time steps.'''
 
-        self.r = r
-        self.dt = dt
+        self.vocab_size = vocab_size
         (v, v_sample, cost, monitor, params, updates_train, v_t,
             updates_generate) = build_rnnrbm(
-                r[1] - r[0],
+                vocab_size,
                 n_hidden,
                 n_hidden_recurrent
             )
+        self.params = params
 
         gradient = T.grad(cost, params, consider_constant=[v_sample])
         updates_train.update(
@@ -220,7 +220,7 @@ class RnnRbm:
             updates=updates_generate
         )
 
-    def train(self, files, batch_size=100, num_epochs=200):
+    def train(self, batch_size=100, num_epochs=200):
         '''Train the RNN-RBM via stochastic gradient descent (SGD) using MIDI
         files converted to piano-rolls.
 
@@ -233,30 +233,33 @@ class RnnRbm:
             Number of epochs (pass over the training set) performed. The user
             can safely interrupt training with Ctrl+C at any time.'''
 
-        assert len(files) > 0, 'Training set is empty!' \
-                               ' (did you download the data files?)'
-        dataset = [midiread(f, self.r,
-                            self.dt).piano_roll.astype(theano.config.floatX)
-                   for f in files]
-
+        dataset = np.load('train.npy')  # FIXME read data
+        max_ix = 54928
         try:
             for epoch in range(num_epochs):
+                print('Starting epoch', epoch)
                 np.random.shuffle(dataset)
                 costs = []
 
                 for s, sequence in enumerate(dataset):
+                    if s % 5 == 0:
+                        print('\t', round(s / len(dataset) * 100, 4), '%')
                     for i in range(0, len(sequence), batch_size):
-                        cost = self.train_function(sequence[i:i + batch_size])
+                        ix = sequence[i]
+                        cost = self.train_function([[0 for _ in range(ix)] + [1] + [0 for _ in range(ix, max_ix)]])#[i:i + batch_size])
                         costs.append(cost)
 
                 print('Epoch %i/%i' % (epoch + 1, num_epochs))
                 print(np.mean(costs))
+                print('Saving ...')
+                with open(os.path.join('theano_train', '{}.pkl'.format(time.time())), 'wb') as f:
+                    pickle.dump(self.params, f)
                 sys.stdout.flush()
 
         except KeyboardInterrupt:
             print('Interrupted by user.')
 
-    def generate(self, filename, show=True):
+    def generate(self, filename):
         '''Generate a sample sequence, plot the resulting piano-roll and save
         it as a MIDI file.
 
@@ -265,17 +268,9 @@ class RnnRbm:
         show : boolean
             If True, a piano-roll of the generated sequence will be shown.'''
 
-        piano_roll = self.generate_function()
-        midiwrite(filename, piano_roll, self.r, self.dt)
-        if show:
-            extent = (0, self.dt * len(piano_roll)) + self.r
-            pylab.figure()
-            pylab.imshow(piano_roll.T, origin='lower', aspect='auto',
-                         interpolation='nearest', cmap=pylab.cm.gray_r,
-                         extent=extent)
-            pylab.xlabel('time (s)')
-            pylab.ylabel('MIDI note number')
-            pylab.title('generated piano-roll')
+        gen_f = self.generate_function()
+        #midiwrite(filename, gen_sequence, self.r, self.dt)
+        gen_f()
 
 
 def test_rnnrbm(batch_size=100, num_epochs=200):
@@ -287,7 +282,5 @@ def test_rnnrbm(batch_size=100, num_epochs=200):
     return model
 
 if __name__ == '__main__':
-    model = test_rnnrbm()
-    model.generate('sample1.mid')
-    model.generate('sample2.mid')
-    pylab.show()
+    model = RnnRbm()
+    model.train()
