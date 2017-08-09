@@ -233,7 +233,7 @@ class RnnRbm:
             Number of epochs (pass over the training set) performed. The user
             can safely interrupt training with Ctrl+C at any time.'''
 
-        dataset = np.load('train.npy')  # FIXME read data
+        dataset = np.load('c_x.npy')  # FIXME read data
         max_ix = self.vocab_size
         eye = np.eye(max_ix, dtype=np.int16)
         try:
