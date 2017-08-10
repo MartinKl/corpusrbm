@@ -21,10 +21,6 @@ np.random.seed(0xbeef)
 rng = RandomStreams(seed=np.random.randint(1 << 30))
 theano.config.warn.subtensor_merge_bug = False  # TODO turn on again
 
-parser = ArgumentParser()
-parser.add_argument('--load', type=str)
-args = parser.parse_args()
-
 
 def build_rbm(v, W, bv, bh, k):
     '''Construct a k-step Gibbs chain starting at v for an RBM.
@@ -170,7 +166,7 @@ def build_rnnrbm(n_visible, n_hidden, n_hidden_recurrent):
         outputs_info=[None, u0], non_sequences=params, n_steps=200)
 
     return (v, v_sample, cost, monitor, params, updates_train, v_t,
-            updates_generate)
+            updates_generate, u_t, bv_t, bh_t)
 
 
 class RnnRbm:
@@ -204,13 +200,12 @@ class RnnRbm:
 
         self.vocab_size = vocab_size
         (v, v_sample, cost, monitor, params, updates_train, v_t,
-            updates_generate) = build_rnnrbm(
+            updates_generate, u_t, bv_t, bh_t, u_tm1) = build_rnnrbm(
                 vocab_size,
                 n_hidden,
                 n_hidden_recurrent
             )
         self.params = params
-
         gradient = T.grad(cost, params, consider_constant=[v_sample])
         updates_train.update(
             ((p, p - lr * g) for p, g in zip(params, gradient))
@@ -224,6 +219,13 @@ class RnnRbm:
             [],
             v_t,
             updates=updates_generate
+        )
+
+        self.hfunc = theano.function(
+            [v_t, u_tm1],
+            [u_t],
+            updates=updates_train,
+            on_unused_input='ignore'
         )
 
     def set_params(self, params):
@@ -243,7 +245,7 @@ class RnnRbm:
             Number of epochs (pass over the training set) performed. The user
             can safely interrupt training with Ctrl+C at any time.'''
 
-        dataset = np.load('c_x.npy')  # FIXME read data
+        dataset = np.load('c_x.npy')
         max_ix = self.vocab_size
         eye = np.eye(max_ix, dtype=np.int16)
         try:
@@ -272,19 +274,14 @@ class RnnRbm:
             print('Interrupted by user.')
 
     def generate(self):
-        '''Generate a sample sequence, plot the resulting piano-roll and save
-        it as a MIDI file.
-
-        filename : string
-            A MIDI file will be created at this location.
-        show : boolean
-            If True, a piano-roll of the generated sequence will be shown.'''
-
         gen_f = self.generate_function
-        #midiwrite(filename, gen_sequence, self.r, self.dt)
         return gen_f()
 
 if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--load', type=str)
+    args = parser.parse_args()
+
     model = RnnRbm()
     print('Calling for training')
     if args.load:
