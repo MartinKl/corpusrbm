@@ -9,6 +9,7 @@ import sys
 import time
 import pickle
 import random
+from argparse import ArgumentParser
 
 import numpy as np
 import theano
@@ -19,6 +20,10 @@ from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 np.random.seed(0xbeef)
 rng = RandomStreams(seed=np.random.randint(1 << 30))
 theano.config.warn.subtensor_merge_bug = False  # TODO turn on again
+
+parser = ArgumentParser()
+parser.add_argument('--load', type=str)
+args = parser.parse_args()
 
 
 def build_rbm(v, W, bv, bh, k):
@@ -221,7 +226,11 @@ class RnnRbm:
             updates=updates_generate
         )
 
-    def train(self, batch_size=100, num_epochs=200):
+    def set_params(self, params):
+        for i in range(len(params)):
+            self.params[i].set_value(params[i])
+
+    def train(self, batch_size=100, num_epochs=sys.maxsize):
         '''Train the RNN-RBM via stochastic gradient descent (SGD) using MIDI
         files converted to piano-rolls.
 
@@ -275,16 +284,9 @@ class RnnRbm:
         #midiwrite(filename, gen_sequence, self.r, self.dt)
         return gen_f()
 
-
-def test_rnnrbm(batch_size=100, num_epochs=200):
-    model = RnnRbm()
-    re = os.path.join(os.path.split(os.path.dirname(__file__))[0],
-                      'data', 'Nottingham', 'train', '*.mid')
-    model.train(glob.glob(re),
-                batch_size=batch_size, num_epochs=num_epochs)
-    return model
-
 if __name__ == '__main__':
     model = RnnRbm()
     print('Calling for training')
+    if args.load:
+        model.set_params(np.load(args.load))
     model.train()
