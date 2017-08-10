@@ -3,6 +3,7 @@ from rnnrbm import RnnRbm
 import pickle
 from theano import tensor as T
 from functools import reduce
+from itertools import chain
 
 
 def params():
@@ -63,7 +64,7 @@ energy_dict = {ix: e_val / max_e for ix, e_val in energy_dict.items()}
 energy = {}
 for data_name, f_name in (
         ('0.1', 'c_x.npy'),
-        ('notker', 'c_x_complete.npy')
+        ('notker', 'c_x_add.npy')
 ):
     arr = np.load(f_name)
     energy[data_name] = []
@@ -75,3 +76,7 @@ for data_name, values in energy.items():
     print(np.mean(values), np.std(values))
     print(np.min(values), np.max(values), end='\n'*2)
 
+values = list(chain(*list(energy.values())))
+print('total:')
+print(np.mean(values), np.std(values))
+print(np.min(values), np.max(values))
