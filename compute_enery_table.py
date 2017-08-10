@@ -6,7 +6,7 @@ from functools import reduce
 
 
 def params():
-    yield from np.load('last_state_80.npy')
+    yield from np.load('latest_model.npy')
 
 network = RnnRbm()
 prm = params()
