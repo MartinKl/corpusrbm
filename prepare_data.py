@@ -1,7 +1,12 @@
 import numpy as np
 import pickle
+from argparse import ArgumentParser
 from collections import defaultdict
 from functools import partial
+
+parser = ArgumentParser()
+parser.add_argument('N', type=int)
+args = parser.parse_args()
 
 with open('vocabs.pkl', 'rb') as f:
     vocab = {v: k for k, v in pickle.load(f)['text'].items()}
@@ -15,14 +20,14 @@ d = {
     '<start>': START_IX,
     '<end>': END_IX
 }
-SEQ_LEN = 1000
+seq_len = args.N
 
 
 def buffered_sequences():
     l = 0
     while l < len(goh):
         seq = ' '.join(vocab[ix] for ix in goh[l])
-        yield from (seq[j:j + SEQ_LEN] for j in range(0, len(seq), SEQ_LEN))
+        yield from (seq[j:j + seq_len] for j in range(0, len(seq), seq_len))
         l += 1
 
 max_len = 0
