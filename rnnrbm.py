@@ -242,7 +242,7 @@ class RnnRbm:
                 np.random.shuffle(dataset)
                 costs = []
 
-                for s, sequence in enumerate(dataset):
+                for s, sequence in enumerate(dataset[:1000]):
                     if s % 5 == 0:
                         print('\t', round(s / len(dataset) * 100, 4), '%')
                     #for i in range(0, len(sequence)):
