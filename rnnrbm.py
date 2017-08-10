@@ -200,7 +200,7 @@ class RnnRbm:
 
         self.vocab_size = vocab_size
         (v, v_sample, cost, monitor, params, updates_train, v_t,
-            updates_generate, u_t, bv_t, bh_t, u_tm1) = build_rnnrbm(
+            updates_generate, u_t, bv_t, bh_t) = build_rnnrbm(
                 vocab_size,
                 n_hidden,
                 n_hidden_recurrent
@@ -219,13 +219,6 @@ class RnnRbm:
             [],
             v_t,
             updates=updates_generate
-        )
-
-        self.hfunc = theano.function(
-            [v_t, u_tm1],
-            [u_t],
-            updates=updates_train,
-            on_unused_input='ignore'
         )
 
     def set_params(self, params):
