@@ -261,7 +261,7 @@ class RnnRbm:
         except KeyboardInterrupt:
             print('Interrupted by user.')
 
-    def generate(self, filename):
+    def generate(self):
         '''Generate a sample sequence, plot the resulting piano-roll and save
         it as a MIDI file.
 
@@ -270,9 +270,9 @@ class RnnRbm:
         show : boolean
             If True, a piano-roll of the generated sequence will be shown.'''
 
-        gen_f = self.generate_function()
+        gen_f = self.generate_function
         #midiwrite(filename, gen_sequence, self.r, self.dt)
-        gen_f()
+        return gen_f()
 
 
 def test_rnnrbm(batch_size=100, num_epochs=200):
@@ -285,4 +285,5 @@ def test_rnnrbm(batch_size=100, num_epochs=200):
 
 if __name__ == '__main__':
     model = RnnRbm()
+    print('Calling for training')
     model.train()

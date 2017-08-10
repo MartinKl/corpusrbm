@@ -26,7 +26,7 @@ seq_len = args.N
 def buffered_sequences():
     l = 0
     while l < len(goh):
-        seq = ' '.join(vocab[ix] for ix in goh[l])
+        seq = ' '.join(vocab[ix] for ix in goh[l] if len(vocab[ix]) < 100)
         yield from (seq[j:j + seq_len] for j in range(0, len(seq), seq_len))
         l += 1
 
