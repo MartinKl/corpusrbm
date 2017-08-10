@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import pickle
+import random
 
 import numpy as np
 import theano
@@ -241,8 +242,8 @@ class RnnRbm:
                 print('Starting epoch', epoch)
                 np.random.shuffle(dataset)
                 costs = []
-
-                for s, sequence in enumerate(dataset[:1000]):
+                start = random.randrange(len(dataset)-1000)
+                for s, sequence in enumerate(dataset[start:start + 1000]):
                     if s % 5 == 0:
                         print('\t', round(s / len(dataset) * 100, 4), '%')
                     #for i in range(0, len(sequence)):
