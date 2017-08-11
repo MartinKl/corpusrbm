@@ -59,7 +59,7 @@ new_keys = \
 
 eye = np.eye(129, dtype=np.uint8)
 energy_dict = {i: free_energy(eye[i]) for i in range(129)}
-max_e = max(energy_dict.values())
+max_e = min(energy_dict.values())
 energy_dict = {ix: e_val / max_e for ix, e_val in energy_dict.items()}
 energy = {}
 for data_name, f_name in (
